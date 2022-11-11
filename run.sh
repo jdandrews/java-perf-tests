@@ -1,4 +1,7 @@
 #!/bin/bash
 
-java -classpath build/classes/java/main com.oracle.jsc.perf.Main
+CLASSPATH=build/libs/java-perf-tests.jar
+
+gradle build
+java -classpath $CLASSPATH com.oracle.jsc.perf.Main
 
