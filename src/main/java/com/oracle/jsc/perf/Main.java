@@ -4,8 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.rmi.registry.LocateRegistry;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 import javax.management.MBeanServer;
 import javax.management.remote.JMXConnectorServer;
@@ -20,10 +25,31 @@ public class Main {
     private static BufferedReader br = new BufferedReader(r);
 
     public static void main(String[] args) throws IOException {
+        listNetworkInterfaces();
         JMXConnectorServer cs = configureJmx(args);
         System.out.println("Hello, world.");
         readLine("press return to exit:");
         cs.stop();
+    }
+
+    private static void listNetworkInterfaces() throws SocketException {
+        System.out.println(
+                NetworkInterface.networkInterfaces().map(i -> describe(i)).collect(Collectors.toUnmodifiableList()));
+    }
+
+    private static String describe(NetworkInterface i) {
+        StringBuffer result = new StringBuffer("\n\n".concat(i.getDisplayName()));
+        try {
+            result.append(":\n\tup: ").append(i.isUp());
+        } catch (SocketException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        for (Enumeration<InetAddress> addressEnum = i.getInetAddresses(); addressEnum.hasMoreElements(); ) {
+            InetAddress address = addressEnum.nextElement();
+            result.append("\n\taddr: ").append(address);
+        }
+        return result.toString();
     }
 
     private static String readLine(String prompt) {
