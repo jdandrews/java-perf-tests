@@ -1,10 +1,12 @@
 #!/bin/bash
 
 CLASSPATH=build/libs/java-perf-tests.jar
-JMX_CONFIG="-Dcom.sun.management.jmxremote.port=7091 -Dcom.sun.management.jmxremote.password.file=/Users/jeandre/jmxremote-password -Dcom.sun.management.jmxremote.ssl=false"
+JMX_PASSWORD_FILE=~/jmxremote-password
+JMX=com.sun.management.jmxremote
+JMX_CONFIG="-D${JMX}.port=7091 -D${JMX}.password.file=${JMX_PASSWORD_FILE} -D${JMX}.ssl=false"
 
 gradle build
 
-echo java -classpath $CLASSPATH  $JMX_CONFIG com.oracle.jsc.perf.Main
+echo $JMX_CONFIG
 java -classpath $CLASSPATH  $JMX_CONFIG com.oracle.jsc.perf.Main
 
