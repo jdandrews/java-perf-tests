@@ -25,11 +25,11 @@ public class Main {
     private static BufferedReader br = new BufferedReader(r);
 
     public static void main(String[] args) throws IOException {
-        listNetworkInterfaces();
-        JMXConnectorServer cs = configureJmx(args);
+        // listNetworkInterfaces();
+        // JMXConnectorServer cs = configureJmx(args);
         System.out.println("Hello, world.");
         readLine("press return to exit:");
-        cs.stop();
+        // cs.stop();
     }
 
     private static void listNetworkInterfaces() throws SocketException {
