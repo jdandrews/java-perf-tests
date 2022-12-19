@@ -10,6 +10,13 @@ import java.net.SocketException;
 import java.rmi.registry.LocateRegistry;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.management.MBeanServer;
@@ -23,13 +30,39 @@ import javax.rmi.ssl.SslRMIServerSocketFactory;
 public class Main {
     private static InputStreamReader r = new InputStreamReader(System.in);
     private static BufferedReader br = new BufferedReader(r);
+    private static ExecutorService sieveExec = Executors.newSingleThreadExecutor();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        log("Hello, world.");
+        // code for launching a local JMX server during JMC debugging:
         // listNetworkInterfaces();
         // JMXConnectorServer cs = configureJmx(args);
-        System.out.println("Hello, world.");
-        readLine("press return to exit:");
+
+        log("press <enter> to exit (heh).");
+        for (int i = 0, c = 0; c != 10 && i < 1000; ++i) {
+            Future<List<Integer>> sieve = (sieveExec.submit(new SieveOfEratosthenes(100000000)));
+            while (!sieve.isDone()) {
+                if (System.in.available() > 0) c = System.in.read();
+                sleep(5);
+            }
+            log(sieve.get().size() + " primes");
+        }
+
+        sieveExec.shutdown();
+
         // cs.stop();
+    }
+
+    private static void log(String s) {
+        System.out.println(s);
+    }
+
+    private static void sleep(long n) {
+        try {
+            Thread.sleep(n);
+        } catch (InterruptedException e) {
+            // no-op
+        }
     }
 
     private static void listNetworkInterfaces() throws SocketException {
@@ -45,7 +78,7 @@ public class Main {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-        for (Enumeration<InetAddress> addressEnum = i.getInetAddresses(); addressEnum.hasMoreElements(); ) {
+        for (Enumeration<InetAddress> addressEnum = i.getInetAddresses(); addressEnum.hasMoreElements();) {
             InetAddress address = addressEnum.nextElement();
             result.append("\n\taddr: ").append(address);
         }
@@ -62,7 +95,7 @@ public class Main {
         }
         return line;
     }
-    
+
     public static JMXConnectorServer configureJmx(String[] args) throws IOException {
 
         // Ensure cryptographically strong random number generator used
@@ -83,7 +116,7 @@ public class Main {
         // Environment map.
         //
         System.out.println("Initialize the environment map");
-        HashMap<String,Object> env = new HashMap<String,Object>();
+        HashMap<String, Object> env = new HashMap<String, Object>();
 
         // Provide SSL-based RMI socket factories.
         //
@@ -120,7 +153,8 @@ public class Main {
         //
         System.out.println("Create an RMI connector server");
 //        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://:3000/jmxrmi");
-        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost:" + 3001  + "/jndi/rmi://localhost:" + 3000 + "/jmxrmi");
+        JMXServiceURL url = new JMXServiceURL(
+                "service:jmx:rmi://localhost:" + 3001 + "/jndi/rmi://localhost:" + 3000 + "/jmxrmi");
         JMXConnectorServer cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
 
         // Start the RMI connector server.
