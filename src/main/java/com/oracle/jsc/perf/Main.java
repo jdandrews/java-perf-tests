@@ -1,56 +1,79 @@
 package com.oracle.jsc.perf;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.rmi.registry.LocateRegistry;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-
-import javax.management.MBeanServer;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
-import javax.management.remote.rmi.RMIConnectorServer;
-import javax.rmi.ssl.SslRMIClientSocketFactory;
-import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 public class Main {
-    private static InputStreamReader r = new InputStreamReader(System.in);
-    private static BufferedReader br = new BufferedReader(r);
+    // We run a Sieve of Eratosthenes to chew up memory, then release it. We run it on its own thread so we can
+    // process user inputs while it's running.
     private static ExecutorService sieveExec = Executors.newSingleThreadExecutor();
 
+    // permanent storage for some data, so we can permanently leak memory when we want to.
+    private static List<SieveResult> memoryLeak = new ArrayList<>();
+
+    // temporary storage for some data, so we can temporarily leak memory.
+    private static PythagoreanCup<List<Integer>> memoryChurner = new PythagoreanCup<>(10);
+
+    private static record SieveResult(Duration elapsed, String message, List<Integer> primes) {
+    }
+
+    private static final int NUMBER_OF_PRIMES_TO_SAVE = 50_000;
+    private static Random random = new Random();
+
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        log("Hello, world.");
-        // code for launching a local JMX server during JMC debugging:
-        // listNetworkInterfaces();
-        // JMXConnectorServer cs = configureJmx(args);
+        Instant start = Instant.now();
+
+        boolean leak = args.length > 0 && args[0].equalsIgnoreCase("leak");
+
+        log("Hello, world." + (leak ? " Now leaking memory." : ""));
+
+        // this loops until it gets a newline input from the console.
+        // each time through the loop, the sieve is run on 1 -> 10,000,000. The sieve allocates "n" booleans,
+        // then returns an arraylist containing the primes: a bit over 5.7M Integers. We shave off a few entries
+        // from that list if we're leaking, and store them in the static memoryLeak array above. Each iteration
+        // takes about half-second, which gives you an idea of how fast the sieve really is.
 
         log("press <enter> to exit (heh).");
-        for (int i = 0, c = 0; c != 10 && i < 1000; ++i) {
-            Future<List<Integer>> sieve = (sieveExec.submit(new SieveOfEratosthenes(100000000)));
+        for (int i = 0, c = 0; c != 10; ++i) {
+            Future<List<Integer>> sieve = (sieveExec.submit(new SieveOfEratosthenes(10_000_000)));
+
+            // This could be done by delegating the whole outer loop to thread, and this to a different thread, and synchronizing,
+            // but I think this approach is a little more transparent.
             while (!sieve.isDone()) {
-                if (System.in.available() > 0) c = System.in.read();
+                if (System.in.available() > 0)
+                    c = System.in.read();
                 sleep(5);
+                if (c == 10) {
+                    sieve.cancel(true);
+                }
             }
-            log(sieve.get().size() + " primes");
+            if (sieve.isCancelled())
+                continue;
+
+            List<Integer> primes = sieve.get();
+            if (i % 50 == 0)
+                log(primes.size() + " primes.");
+
+            memoryChurner.add(primes);
+            if (leak) {
+                String message = primes.size() + " primes";
+                // randomize the chunk of the final list of primes to save
+                int n1 = random.nextInt(primes.size() - NUMBER_OF_PRIMES_TO_SAVE);
+                List<Integer> savedPrimes = new ArrayList<>(primes.subList(n1, n1 + NUMBER_OF_PRIMES_TO_SAVE));
+
+                memoryLeak.add(new SieveResult(Duration.between(start, Instant.now()), message, savedPrimes));
+            }
         }
 
         sieveExec.shutdown();
-
-        // cs.stop();
     }
 
     private static void log(String s) {
@@ -63,105 +86,5 @@ public class Main {
         } catch (InterruptedException e) {
             // no-op
         }
-    }
-
-    private static void listNetworkInterfaces() throws SocketException {
-        System.out.println(
-                NetworkInterface.networkInterfaces().map(i -> describe(i)).collect(Collectors.toUnmodifiableList()));
-    }
-
-    private static String describe(NetworkInterface i) {
-        StringBuffer result = new StringBuffer("\n\n".concat(i.getDisplayName()));
-        try {
-            result.append(":\n\tup: ").append(i.isUp());
-        } catch (SocketException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-        for (Enumeration<InetAddress> addressEnum = i.getInetAddresses(); addressEnum.hasMoreElements();) {
-            InetAddress address = addressEnum.nextElement();
-            result.append("\n\taddr: ").append(address);
-        }
-        return result.toString();
-    }
-
-    private static String readLine(String prompt) {
-        String line = "";
-        try {
-            System.out.println(prompt);
-            line = br.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return line;
-    }
-
-    public static JMXConnectorServer configureJmx(String[] args) throws IOException {
-
-        // Ensure cryptographically strong random number generator used
-        // to choose the object number - see java.rmi.server.ObjID
-        //
-        System.setProperty("java.rmi.server.randomIDs", "true");
-
-        // Start an RMI registry on port 3000.
-        //
-        System.out.println("Create RMI registry on port 3000");
-        LocateRegistry.createRegistry(3000);
-
-        // Retrieve the PlatformMBeanServer.
-        //
-        System.out.println("Get the platform's MBean server");
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
-        // Environment map.
-        //
-        System.out.println("Initialize the environment map");
-        HashMap<String, Object> env = new HashMap<String, Object>();
-
-        // Provide SSL-based RMI socket factories.
-        //
-        // The protocol and cipher suites to be enabled will be the ones
-        // defined by the default JSSE implementation and only server
-        // authentication will be required.
-        //
-        SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
-        SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
-        env.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, csf);
-        env.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, ssf);
-
-        // Provide the password file used by the connector server to
-        // perform user authentication. The password file is a properties
-        // based text file specifying username/password pairs.
-        //
-        env.put("jmx.remote.x.password.file", "password.properties");
-
-        // Provide the access level file used by the connector server to
-        // perform user authorization. The access level file is a properties
-        // based text file specifying username/access level pairs where
-        // access level is either "readonly" or "readwrite" access to the
-        // MBeanServer operations.
-        //
-        // env.put("jmx.remote.x.access.file", "access.properties");
-
-        // Create an RMI connector server.
-        //
-        // As specified in the JMXServiceURL the RMIServer stub will be
-        // registered in the RMI registry running in the local host on
-        // port 3000 with the name "jmxrmi". This is the same name that the
-        // ready-to-use management agent uses to register the RMIServer
-        // stub.
-        //
-        System.out.println("Create an RMI connector server");
-//        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://:3000/jmxrmi");
-        JMXServiceURL url = new JMXServiceURL(
-                "service:jmx:rmi://localhost:" + 3001 + "/jndi/rmi://localhost:" + 3000 + "/jmxrmi");
-        JMXConnectorServer cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
-
-        // Start the RMI connector server.
-        //
-        System.out.println("Start the RMI connector server");
-        cs.start();
-
-        return cs;
     }
 }

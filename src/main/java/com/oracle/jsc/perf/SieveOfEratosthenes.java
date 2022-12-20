@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
  * Calculates the sieve. Slightly modified from code from:
  * <a href="https://www.geeksforgeeks.org/java-program-for-sieve-of-eratosthenes/">Geeks for Geeks Sieve</a>
  * 
- * This code has been contributed by Amit Khandelwal.
+ * The original code was contributed Geeks for Geeks by Amit Khandelwal.
  */
 public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integer>> {
     public SieveOfEratosthenes() {
@@ -17,7 +17,7 @@ public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integ
 
     /**
      * Create a boolean array "prime[0..n]" and initialize all entries it as true. A value in prime[i] will
-     * finally be false if i is Not a prime, else true.
+     * finally be false if i is not a prime, else true.
      * 
      * @param n the size of the initial array.
      * @return a list of primes between 2 and n, inclusive.
@@ -28,28 +28,25 @@ public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integ
             prime[i] = true;
 
         for (int p = 2; p * p <= n; p++) {
-            // If prime[p] is not changed, then it is a prime
             if (prime[p] == true) {
                 // Update all multiples of p
                 for (int i = p * p; i <= n; i += p)
                     prime[i] = false;
             }
-
         }
 
-        List<Integer> result = new ArrayList<>();
-        // Print all prime numbers
+        List<Integer> primes = new ArrayList<>();
         for (int i = 2; i <= n; i++) {
             if (prime[i] == true)
-                result.add(i);
+                primes.add(i);
 
             // slow things down so we can instrument the process and see memory behavior
-            if (i % 100000 == 0) {
+            if (i % 2000 == 0) {
                 sleep(1L);
             }
         }
 
-        return result;
+        return primes;
     }
 
     private void sleep(long n) {
@@ -60,6 +57,11 @@ public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integ
         }
     }
 
+    @Override
+    public List<Integer> call() throws Exception {
+        return sieveOfEratosthenes(primeLimit);
+    }
+
     // Driver Program to test above function
     public static void main(String args[]) {
         int n = 30;
@@ -67,10 +69,5 @@ public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integ
         System.out.println("smaller than or equal to " + n);
         SieveOfEratosthenes g = new SieveOfEratosthenes();
         System.out.println(g.sieveOfEratosthenes(n));
-    }
-
-    @Override
-    public List<Integer> call() throws Exception {
-        return sieveOfEratosthenes(primeLimit);
     }
 }

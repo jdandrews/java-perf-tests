@@ -6,9 +6,11 @@ Demos designed to show java metrics under stress and tuning conditions
 
 Enough RAM:
 
-    java -cp bin -Xmx767m -XX:+UseParallelGC com.oracle.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseParallelGC com.oracle.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseG1GC com.oracle.jsc.perf.Main
 
 Not quite enough RAM:
 
     java -cp bin -Xmx256m -XX:+UseG1GC com.oracle.jsc.perf.Main
-    java -cp bin -Xmx384m -XX:+UseParallelGC com.oracle.jsc.perf.Main
+
+    java -cp bin -Xmx50m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.oracle.jsc.perf.Main
