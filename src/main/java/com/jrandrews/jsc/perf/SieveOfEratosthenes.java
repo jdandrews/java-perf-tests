@@ -1,4 +1,4 @@
-package com.oracle.jsc.perf;
+package com.jrandrews.jsc.perf;
 
 import java.util.ArrayList;
 import java.util.List;

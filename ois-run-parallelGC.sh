@@ -13,5 +13,5 @@ OPTS="-Djava.net.preferIPv4Stack=true -Djava.rmi.server.hostname=localhost -Xmx$
 gradle build
 
 echo ${OPTS} ${JMX_CONFIG} ${LEAK}
-java -classpath $CLASSPATH ${OPTS} ${JMX_CONFIG} com.oracle.jsc.perf.Main ${LEAK}
+java -classpath $CLASSPATH ${OPTS} ${JMX_CONFIG} com.jrandrews.jsc.perf.Main ${LEAK}
 

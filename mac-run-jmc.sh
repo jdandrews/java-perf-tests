@@ -8,5 +8,5 @@ JMX_CONFIG="-D${JMX}.port=7091 -D${JMX}.password.file=${JMX_PASSWORD_FILE} -D${J
 gradle build
 
 echo $JMX_CONFIG
-java -classpath $CLASSPATH -Djava.net.preferIPv4Stack=true $JMX_CONFIG com.oracle.jsc.perf.Main
+java -classpath $CLASSPATH -Djava.net.preferIPv4Stack=true $JMX_CONFIG com.jrandrews.jsc.perf.Main
 

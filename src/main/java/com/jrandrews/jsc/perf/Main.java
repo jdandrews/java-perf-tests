@@ -1,4 +1,4 @@
-package com.oracle.jsc.perf;
+package com.jrandrews.jsc.perf;
 
 import java.io.IOException;
 import java.time.Duration;

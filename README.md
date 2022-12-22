@@ -2,15 +2,24 @@
 Demos designed to show java metrics under stress and tuning conditions
 
 # Sieve of Eratosthenes
-    javac -d bin -s src/main/java \*\*/\*.java
+build:
+
+    javac -d bin -s src/main/java `find src -name "*.java"`
 
 Enough RAM:
 
-    java -cp bin -Xmx128m -XX:+UseParallelGC com.oracle.jsc.perf.Main
-    java -cp bin -Xmx128m -XX:+UseG1GC com.oracle.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseParallelGC com.jrandrews.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseG1GC com.jrandrews.jsc.perf.Main
 
 Not quite enough RAM:
 
-    java -cp bin -Xmx256m -XX:+UseG1GC com.oracle.jsc.perf.Main
+    java -cp bin -Xmx50m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
+    java -cp bin -Xmx50m -XX:+UseG1GC       com.jrandrews.jsc.perf.Main
 
-    java -cp bin -Xmx50m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.oracle.jsc.perf.Main
+Overhead from JFR might require and extra 1m of heap if you want to make recordings in addition to monitoring JMX.
+
+Leak:
+
+    java -cp bin -Xmx128m -XX:+UseG1GC       -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
+
