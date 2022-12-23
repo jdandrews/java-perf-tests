@@ -22,7 +22,29 @@ public class Main {
     // temporary storage for some data, so we can temporarily leak memory.
     private static PythagoreanCup<List<Integer>> memoryChurner = new PythagoreanCup<>(10);
 
-    private static record SieveResult(Duration elapsed, String message, List<Integer> primes) {
+    // this would be perfect as a record, but it needs to work under Java 8.
+    public static class SieveResult {
+        private final Duration elapsed;
+        private final String message;
+        private final List<Integer> primes;
+
+        public SieveResult(Duration elapsed, String message, List<Integer> primes) {
+            this.elapsed = elapsed;
+            this.message = message;
+            this.primes = primes;
+        }
+
+        public Duration getElapsed() {
+            return elapsed;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public List<Integer> getPrimes() {
+            return primes;
+        }
     }
 
     private static final int NUMBER_OF_PRIMES_TO_SAVE = 50_000;

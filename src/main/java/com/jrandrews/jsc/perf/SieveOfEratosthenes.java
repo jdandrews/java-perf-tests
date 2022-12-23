@@ -10,7 +10,13 @@ import java.util.concurrent.Callable;
  * 
  * The original code was contributed Geeks for Geeks by Amit Khandelwal.
  */
-public record SieveOfEratosthenes(int primeLimit) implements Callable<List<Integer>> {
+public class SieveOfEratosthenes implements Callable<List<Integer>> {
+    private int primeLimit;
+
+    public SieveOfEratosthenes(int primeLimit) {
+        this.primeLimit = primeLimit;
+    }
+
     public SieveOfEratosthenes() {
         this(1000);
     }
