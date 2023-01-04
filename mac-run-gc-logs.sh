@@ -1,4 +1,6 @@
 #!/bin/bash
+MAX_HEAP=$1
+LEAK=$2
 
 CLASSPATH=build/libs/java-perf-tests.jar
 
@@ -15,6 +17,12 @@ else
     LOGS="-Xlog:gc*,gc+ref=debug,gc+age=trace,gc+heap=debug:file=gc%p%t.log:tags,uptime,time:filecount=10,filesize=10m"
 fi
 
+if [[ "${MAX_HEAP}" == "" ]]; then
+    echo "max heap not specified; using 1G"
+    MAX_HEAP="1G"
+fi;
+
+OPTS="-Xmx${MAX_HEAP}"
 
 gradle build
 
@@ -23,5 +31,5 @@ echo
 echo ${LOGS}
 echo
 
-java -classpath $CLASSPATH -Djava.net.preferIPv4Stack=true ${LOGS} com.jrandrews.jsc.perf.Main
+java -classpath $CLASSPATH -Djava.net.preferIPv4Stack=true ${LOGS} ${OPTS} com.jrandrews.jsc.perf.Main ${LEAK}
 

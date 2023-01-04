@@ -23,3 +23,10 @@ Leak:
     java -cp bin -Xmx128m -XX:+UseG1GC       -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
     java -cp bin -Xmx128m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
 
+GC logging:
+
+...
+
+# Deadlock
+
+    java -cp bin com.jrandrews.jsc.perf.Deadlock
