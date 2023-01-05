@@ -5,7 +5,7 @@ build:
 
     javac -d bin -s src/main/java `find src -name "*.java"`
 
-# Sieve of Eratosthenes
+# Memory Performance
 
 Enough RAM:
 
