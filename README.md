@@ -21,12 +21,18 @@ Overhead from JFR might require and extra 1m of heap if you want to make recordi
 
 Leak:
 
-    java -cp bin -Xmx128m -XX:+UseG1GC       -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
-    java -cp bin -Xmx128m -XX:+UseParallelGC -XX:FlightRecorderOptions=stackdepth=128 com.jrandrews.jsc.perf.Main
+    java -cp bin -Xmx128m -XX:+UseG1GC       com.jrandrews.jsc.perf.Main leak
+    java -cp bin -Xmx128m -XX:+UseParallelGC com.jrandrews.jsc.perf.Main leak
 
-GC logging:
+add
 
-...
+    -XX:FlightRecorderOptions=stackdepth=128
+
+to avoid JFR complaints if you want to observe these JVMs with JDK Flight Control and JFR.
+
+## GC logging:
+
+see mac-run-gc-logs.sh for JDK8 and JDK9+ options. 
 
 # Deadlock
 
@@ -35,3 +41,4 @@ GC logging:
 # Thread contention
 
     java -cp bin com.jrandrews.jsc.perf.ThreadContention
+
