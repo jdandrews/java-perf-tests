@@ -1,10 +1,11 @@
 # java-perf-tests
 Demos designed to show java metrics under stress and tuning conditions
 
-# Sieve of Eratosthenes
 build:
 
     javac -d bin -s src/main/java `find src -name "*.java"`
+
+# Sieve of Eratosthenes
 
 Enough RAM:
 
@@ -30,3 +31,7 @@ GC logging:
 # Deadlock
 
     java -cp bin com.jrandrews.jsc.perf.Deadlock
+
+# Thread contention
+
+    java -cp bin com.jrandrews.jsc.perf.ThreadContention
