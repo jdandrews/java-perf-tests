@@ -1,6 +1,7 @@
 package com.jrandrews.jsc.perf;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,6 +11,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
+
+import com.jrandrews.jsc.perf.mbean.Hello;
 
 public class Main {
     // We run a Sieve of Eratosthenes to chew up memory, then release it. We run it on its own thread so we can
@@ -51,6 +61,8 @@ public class Main {
     private static Random random = new Random();
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        initMbean();
+
         Instant start = Instant.now();
 
         boolean leak = args.length > 0 && args[0].equalsIgnoreCase("leak");
@@ -96,6 +108,21 @@ public class Main {
         }
 
         sieveExec.shutdown();
+    }
+
+    private static void initMbean() {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try {
+            ObjectName name = new ObjectName("com.jrandrews.jsc.perf.mbean:type=Hello");
+            Hello mbean = new Hello();
+            mbs.registerMBean(mbean, name);
+
+        } catch ( MalformedObjectNameException
+                | InstanceAlreadyExistsException
+                | MBeanRegistrationException
+                | NotCompliantMBeanException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void log(String s) {
