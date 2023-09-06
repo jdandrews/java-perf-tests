@@ -10,11 +10,11 @@ JAVA_VERSION=`echo $JAVA_FULL_VERSION | grep version | awk '{print $3}'`
 echo "using ${JAVA_FULL_VERSION}"
 
 if [[ "$JAVA_VERSION" == *"1.8"* ]]; then
-    LOGS="-Xloggc:gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10M"
+    LOGS="-Xloggc:gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=50M"
     LOGS="${LOGS} -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintReferenceGC"
     LOGS="${LOGS} -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime"
 else
-    LOGS="-Xlog:gc*,gc+ref=debug,gc+age=trace,gc+heap=debug:file=gc%p%t.log:tags,uptime,time:filecount=10,filesize=10m"
+    LOGS="-Xlog:gc*,gc+ref=debug,gc+age=trace,gc+heap=debug:file=gc%p%t.log:tags,uptime,time:filecount=10,filesize=50m"
 fi
 
 if [[ "${MAX_HEAP}" == "" ]]; then

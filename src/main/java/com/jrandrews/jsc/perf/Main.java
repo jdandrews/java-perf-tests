@@ -24,13 +24,13 @@ import com.jrandrews.jsc.perf.mbean.Hello;
 public class Main {
     // We run a Sieve of Eratosthenes to chew up memory, then release it. We run it on its own thread so we can
     // process user inputs while it's running.
-    private static ExecutorService sieveExec = Executors.newSingleThreadExecutor();
+    private static final ExecutorService sieveExec = Executors.newSingleThreadExecutor();
 
     // permanent storage for some data, so we can permanently leak memory when we want to.
-    private static List<SieveResult> memoryLeak = new ArrayList<>();
+    private static final List<SieveResult> memoryLeak = new ArrayList<>();
 
     // temporary storage for some data, so we can temporarily leak memory.
-    private static PythagoreanCup<List<Integer>> memoryChurner = new PythagoreanCup<>(10);
+    private static final PythagoreanCup<List<Integer>> memoryChurner = new PythagoreanCup<>(10);
 
     // this would be perfect as a record, but it needs to work under Java 8.
     public static class SieveResult {
@@ -58,7 +58,7 @@ public class Main {
     }
 
     private static final int NUMBER_OF_PRIMES_TO_SAVE = 50_000;
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         initMbean();
