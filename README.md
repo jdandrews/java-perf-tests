@@ -57,4 +57,3 @@ example:
 # Thread contention
 
     java -cp bin com.jrandrews.jsc.perf.ThreadContention
-
