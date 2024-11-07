@@ -1,0 +1,16 @@
+#!java --source 11
+
+import java.io.Console;
+
+public class Main {
+    private static final Console console = console();
+
+    public static void main(final String[] args){
+        console.printf("This application will run until you press [ENTER].%n");
+        console.readLine("Press [ENTER] to exit (heh): ");
+    }
+
+    private static Console console() {
+        return System.console();
+    }
+}
